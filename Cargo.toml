@@ -1,6 +1,6 @@
 [package]
 name = "serde_more"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jagoda Estera Ślązak <jslazak@jslazak.com>"]
 description = "Procedural macro to add arbitrary data when serializing using serde"
 categories = ["encoding"]
