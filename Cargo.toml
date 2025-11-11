@@ -1,26 +1,20 @@
-[package]
-name = "serde_more"
+[workspace]
+members = ["serde_more", "serde_more_derive"]
+resolver = "2"
+
+[workspace.package]
 version = "0.1.2"
 authors = ["Jagoda Estera Ślązak <jslazak@jslazak.com>"]
-description = "Procedural macro to add arbitrary data when serializing using serde"
-categories = ["encoding"]
-keywords = ["serde", "serialization"]
 license = "MIT OR Apache-2.0"
 edition = "2024"
 repository = "https://github.com/j-g00da/serde-more"
-readme = "README.md"
 
-[lib]
-proc-macro = true
-
-[dependencies]
+[workspace.dependencies]
+serde = "1"
 quote = "1"
 proc-macro2 = "1"
 syn = "2"
-
-[dev-dependencies]
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 testresult = "0.4"
 rstest = "0.26"
-serde_with = { version = "3", features = ["macros", "hex"] }
+serde_with = "3"
