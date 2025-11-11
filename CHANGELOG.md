@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/j-g00da/serde-more/compare/v0.1.1...v0.1.2) - 2025-11-11
+
+### Added
+
+- Option to choose serialization order ([#2](https://github.com/j-g00da/serde-more/pull/2))
+
 ## [0.1.1](https://github.com/j-g00da/serde-more/compare/v0.1.0...v0.1.1) - 2025-11-10
 
 ### Other
