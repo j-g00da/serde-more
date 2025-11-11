@@ -3,6 +3,7 @@ name = "serde_more_derive"
 description = "Derive macro for serde_more"
 categories = ["encoding"]
 keywords = ["serde", "serialization"]
+readme = "README.md"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
