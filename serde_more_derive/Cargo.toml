@@ -1,0 +1,23 @@
+[package]
+name = "serde_more_derive"
+description = "Derive macro for serde_more"
+categories = ["encoding"]
+keywords = ["serde", "serialization"]
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote.workspace = true
+proc-macro2.workspace = true
+syn.workspace = true
+
+[dev-dependencies]
+serde_more = { path = "../serde_more" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = "1"
