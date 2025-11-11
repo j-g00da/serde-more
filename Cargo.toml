@@ -8,6 +8,7 @@ authors = ["Jagoda Estera Ślązak <jslazak@jslazak.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2024"
 repository = "https://github.com/j-g00da/serde-more"
+readme = "README.md"
 
 [workspace.dependencies]
 serde = "1"
