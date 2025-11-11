@@ -3,7 +3,7 @@ members = ["serde_more", "serde_more_derive"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Jagoda Estera Ślązak <jslazak@jslazak.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2024"
