@@ -17,13 +17,17 @@ use serde_json::json;
 
 #[derive(SerializeMore)]
 #[more(key="next")]
+#[more(key="previous", position="front")]
 struct Index {
     current: u32,
 }
 
 impl Index {
     fn next(&self) -> u32 {
-        self.current + 1
+        self.current.saturating_add(1)
+    }
+    fn previous(&self) -> u32 {
+        self.current.saturating_sub(1)
     }
 }
 
@@ -31,6 +35,7 @@ fn main() {
     let idx = Index { current: 5 };
     let value = serde_json::to_value(&idx).unwrap();
     assert_eq!(value, json!({
+        "previous": 4,
         "current": 5,
         "next": 6
     }));
@@ -163,6 +168,9 @@ The `#[more(...)]` attribute supports the following syntax:
 
 // If value/v is omitted, method name is assumed to be the same as key
 #[more(k="field_name")]
+
+// Use position="front" to serialize the computed field before the struct fields
+#[more(key="field_name", position="front")]
 ```
 
 ## Limitations

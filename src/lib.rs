@@ -28,6 +28,9 @@ use syn::{Attribute, Data, DeriveInput, Fields, LitStr, parse_macro_input};
 /// #[more(k="description", v="get_description")]
 /// // If only key is provided, value method is assumed to have the same name.
 /// #[more(k="name")]
+/// // Use `position="front"` to put a field before regular fields.
+/// // Default is "back" (after regular fields).
+/// #[more(key="previous", position="front")]
 /// struct Index {
 ///     current: u32,
 /// }
@@ -38,11 +41,15 @@ use syn::{Attribute, Data, DeriveInput, Fields, LitStr, parse_macro_input};
 ///     }
 ///
 ///     fn get_next(&self) -> u32 {
-///         self.current + 1
+///         self.current.saturating_add(1)
 ///     }
 ///
 ///     const fn name(&self) -> &str {
 ///         "Index"
+///     }
+///
+///     fn previous(&self) -> u32 {
+///         self.current.saturating_sub(1)
 ///     }
 /// }
 ///
@@ -50,6 +57,7 @@ use syn::{Attribute, Data, DeriveInput, Fields, LitStr, parse_macro_input};
 ///     let idx = Index { current: 5 };
 ///     let value = serde_json::to_value(&idx).unwrap();
 ///     assert_eq!(value, json!({
+///         "previous": 4,
 ///         "current": 5,
 ///         "next": 6,
 ///         "description": "Index struct",
@@ -63,10 +71,12 @@ pub fn serialize_more_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
-    let mut extra_pairs: Vec<(String, String)> = Vec::new();
+    let mut front_pairs: Vec<(String, String)> = Vec::new();
+    let mut back_pairs: Vec<(String, String)> = Vec::new();
     for attr in &input.attrs {
         match parse_more_attribute(attr) {
-            Ok(Some((k, v))) => extra_pairs.push((k, v)),
+            Ok(Some((k, v, true))) => front_pairs.push((k, v)),
+            Ok(Some((k, v, false))) => back_pairs.push((k, v)),
             Ok(None) => {}
             Err(e) => return TokenStream::from(e.to_compile_error()),
         }
@@ -116,8 +126,17 @@ pub fn serialize_more_derive(input: TokenStream) -> TokenStream {
         quote! { #name: &self.#name }
     });
 
-    let extra_keys: Vec<_> = extra_pairs.iter().map(|(k, _)| k).collect();
-    let extra_methods: Vec<_> = extra_pairs
+    let front_keys: Vec<_> = front_pairs.iter().map(|(k, _)| k).collect();
+    let front_methods: Vec<_> = front_pairs
+        .iter()
+        .map(|(_, v)| {
+            let method_ident = syn::Ident::new(v, proc_macro2::Span::call_site());
+            quote! { self.#method_ident() }
+        })
+        .collect();
+
+    let back_keys: Vec<_> = back_pairs.iter().map(|(k, _)| k).collect();
+    let back_methods: Vec<_> = back_pairs
         .iter()
         .map(|(_, v)| {
             let method_ident = syn::Ident::new(v, proc_macro2::Span::call_site());
@@ -329,6 +348,11 @@ pub fn serialize_more_derive(input: TokenStream) -> TokenStream {
                 }
 
                 let mut map = serializer.serialize_map(None)?;
+
+                #(
+                    map.serialize_entry(#front_keys, &#front_methods)?;
+                )*
+
                 {
                     let flat = FlatMapSerializer {
                         map: &mut map,
@@ -337,7 +361,7 @@ pub fn serialize_more_derive(input: TokenStream) -> TokenStream {
                 }
 
                 #(
-                    map.serialize_entry(#extra_keys, &#extra_methods)?;
+                    map.serialize_entry(#back_keys, &#back_methods)?;
                 )*
 
                 map.end()
@@ -348,13 +372,14 @@ pub fn serialize_more_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(serialize_impl)
 }
 
-fn parse_more_attribute(attr: &Attribute) -> syn::Result<Option<(String, String)>> {
+fn parse_more_attribute(attr: &Attribute) -> syn::Result<Option<(String, String, bool)>> {
     if !attr.path().is_ident("more") {
         return Ok(None);
     }
 
     let mut key: Option<String> = None;
     let mut value: Option<String> = None;
+    let mut is_front: bool = false;
 
     attr.parse_nested_meta(|meta| {
         if meta.path.is_ident("key") || meta.path.is_ident("k") {
@@ -365,14 +390,29 @@ fn parse_more_attribute(attr: &Attribute) -> syn::Result<Option<(String, String)
             let lit: LitStr = meta.value()?.parse()?;
             value = Some(lit.value());
             Ok(())
+        } else if meta.path.is_ident("position") {
+            let lit: LitStr = meta.value()?.parse()?;
+            is_front = match lit.value().to_ascii_lowercase().as_str() {
+                "front" => true,
+                "back" => false,
+                invalid => {
+                    return Err(syn::Error::new_spanned(
+                        attr,
+                        format!("invalid position '{invalid}', expected 'front' or 'back'"),
+                    ));
+                }
+            };
+            Ok(())
         } else {
-            Err(meta.error("unsupported attribute key, expected 'key', 'k', 'value', or 'v'"))
+            Err(meta.error(
+                "unsupported attribute key, expected 'key', 'k', 'value', 'v', or 'position'",
+            ))
         }
     })?;
 
     match (key, value) {
-        (Some(k), Some(v)) => Ok(Some((k, v))),
-        (Some(k), None) => Ok(Some((k.clone(), k))),
+        (Some(k), Some(v)) => Ok(Some((k, v, is_front))),
+        (Some(k), None) => Ok(Some((k.clone(), k, is_front))),
         _ => Ok(None),
     }
 }

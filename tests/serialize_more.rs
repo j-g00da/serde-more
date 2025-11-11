@@ -62,11 +62,39 @@ impl WithSerdeAsAttrs {
     }
 }
 
+#[derive(SerializeMore)]
+#[more(k = "a", position = "front")]
+#[more(k = "d")]
+#[more(k = "e", position = "back")]
+#[more(k = "b", position = "front")]
+struct WithPosition {
+    c: &'static str,
+}
+
+impl WithPosition {
+    const fn a(&self) -> &str {
+        "a"
+    }
+
+    const fn d(&self) -> &str {
+        "d"
+    }
+
+    const fn e(&self) -> &str {
+        "e"
+    }
+
+    const fn b(&self) -> &str {
+        "b"
+    }
+}
+
 #[rstest]
 #[case::struct_single(&Basic { normal_field: 7 }, json!({"normal_field":7, "normal_field_squared":49}))]
 #[case::struct_multiple(&Multi { x: 3 }, json!({"x":3,"x_1":4,"x_2":5}))]
 #[case::serde_attrs(&WithSerdeAttrs { field_name: 1, opt_value: None }, json!({"field-name":1, "extraVal":"ok"}))]
 #[case::serde_with(&WithSerdeAsAttrs { payload: vec![0x0a, 0xff] }, json!({"payload":"0aff","payload_len":2}))]
+#[case::with_position(&WithPosition { c: "c" }, json!({"a":"a","b":"b","c":"c","d":"d","e":"e"}))]
 fn serialize_more<T: Serialize>(
     #[case] input: T,
     #[case] expected: serde_json::Value,
