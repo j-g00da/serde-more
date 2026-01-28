@@ -23,7 +23,7 @@ jobs:
         with:
           toolchain: nightly
           components: rustfmt
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2
       - uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532 # v2
         with:
           tool: taplo-cli
@@ -54,7 +54,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2
       - run: cargo clippy
         env:
           RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
@@ -73,5 +73,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@f7ccc83f9ed1e5b9c81d8a67d7ad1a747e22a561 # master
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2
       - run: cargo test
